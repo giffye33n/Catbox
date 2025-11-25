@@ -277,3 +277,56 @@ jQuery(async () => {
         $('#ph-clock').text(`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`);
     }, 1000);
 });
+
+// ส่งข้อความและคุยกับบอท (Ghost Mode)
+async function sendGhostMsg(content = null, isImg = false) {
+    if (!activePhoneChar) {
+        alert("Please select a contact first!");
+        openApp('contacts');
+        return;
+    }
+
+    const input = $('#chat-inp');
+    const text = content || input.val().trim();
+    if(!text) return;
+    input.val('');
+
+    // 1. Show User Msg
+    const html = isImg ? `<img src="${text}" class="msg-img">` : text;
+    addBubble('user', html);
+
+    // 2. Prepare Prompt (ส่วนสำคัญที่ถูกแก้ไข)
+    phoneChatHistory.push({ role: 'User', content: isImg ? '[Sent an image]' : text });
+    
+    // **คำสั่งที่กำหนดให้บอทตอบเป็นข้อความคุยเท่านั้น:**
+    let prompt = `You are roleplaying as ${activePhoneChar.name}. You are texting on an instant messenger. Your reply MUST be ONLY the text message content, without any narration, descriptions of actions, feelings, or atmosphere. DO NOT use asterisks (*) or parentheses () for actions/emotions. Keep replies short and realistic for texting.\n`;
+    prompt += `Persona: ${activePhoneChar.persona}\n\n`;
+    prompt += `Chat History:\n`;
+    
+    // ใส่ประวัติการคุย
+    phoneChatHistory.slice(-6).forEach(h => prompt += `${h.role}: ${h.content}\n`);
+    prompt += `${activePhoneChar.name}:`;
+
+    const loadingId = 'load-' + Date.now();
+    addBubble('bot', `<span id="${loadingId}">...</span>`);
+
+    try {
+        // ยิง API ไปหา LLM
+        const res = await fetch('/api/generate/text', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                prompt: prompt,
+                use_story: false, use_memory: false,
+                single_line: true, max_length: 100 // จำกัดให้ตอบสั้น
+            })
+        });
+        const data = await res.json();
+        const reply = data.results[0].text.trim();
+
+        $(`#${loadingId}`).parent().text(reply);
+        phoneChatHistory.push({ role: activePhoneChar.name, content: reply });
+    } catch(e) {
+        $(`#${loadingId}`).parent().text("Error connecting to AI");
+    }
+}
