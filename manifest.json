@@ -1,9 +1,8 @@
 {
-    "display_name": "SillyOS Smartphone",
+    "display_name": "Eclaircatphone OS",
     "author": "Eclair",
-    "version": "2.0.0",
+    "version": "3.0.0",
     "css": "style.css",
     "js": "index.js",
-    "type": "module",
-    "description": "A fully functional modern virtual smartphone for memes and chatting."
+    "description": "Smart phone interface with floating trigger button."
 }
