@@ -1,125 +1,115 @@
-/* --- ปุ่มเปิด (Trigger) --- */
+/* --- ปุ่มเปิดมือถือ (ลอยมุมซ้าย) --- */
 #phone-trigger-btn {
-    position: fixed; bottom: 20px; left: 20px;
-    width: 55px; height: 55px;
-    background: #25D366; /* สีเขียวเหมือนแอปแชท */
+    position: fixed; bottom: 30px; left: 30px;
+    width: 60px; height: 60px;
+    background: linear-gradient(135deg, #11998e, #38ef7d);
     border-radius: 50%;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     z-index: 20001;
     display: flex; justify-content: center; align-items: center;
-    color: white; font-size: 24px; cursor: pointer;
-    border: 3px solid white;
+    color: white; font-size: 28px; cursor: pointer;
+    border: 3px solid rgba(255,255,255,0.8);
+    transition: transform 0.2s;
 }
+#phone-trigger-btn:hover { transform: scale(1.1); }
 
-/* --- ตัวเครื่อง --- */
+/* --- ตัวเครื่อง (Draggable Container) --- */
 #silly-phone-root {
-    position: fixed;
-    top: 100px; left: 300px; /* ตำแหน่งเริ่มต้น */
-    width: 350px; height: 700px;
-    z-index: 20002;
+    position: fixed; top: 100px; left: 200px;
+    width: 340px; height: 680px;
+    z-index: 20000;
     font-family: 'Segoe UI', sans-serif;
     display: none;
 }
 
-/* เคสโทรศัพท์ (พื้นที่สำหรับจับลาก) */
+/* เคสโทรศัพท์ (จับตรงนี้เพื่อลาก) */
 .phone-case {
     width: 100%; height: 100%;
-    background: #000;
-    border-radius: 50px;
+    background: #1a1a1a;
+    border-radius: 45px;
     padding: 12px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-    border: 4px solid #333;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+    border: 3px solid #444;
     position: relative;
-    cursor: grab; /* ไอคอนมือจับ */
+    cursor: move; /* เมาส์เป็นรูปย้าย */
 }
-.phone-case:active { cursor: grabbing; }
 
-/* หน้าจอ */
+/* หน้าจอ (ห้ามลากตรงนี้) */
 .screen {
     width: 100%; height: 100%;
-    background: #fff;
-    border-radius: 40px;
+    background-color: #000;
+    background-size: cover; background-position: center;
+    border-radius: 35px;
     overflow: hidden;
     position: relative;
+    cursor: default; /* เมาส์ปกติ */
     display: flex; flex-direction: column;
-    cursor: default; /* ในจอห้ามลาก */
 }
 
-/* Dynamic Island (จุดจับลากหลัก) */
+/* Dynamic Island */
 .dynamic-island {
-    position: absolute; top: 10px; left: 50%;
-    transform: translateX(-50%);
-    width: 100px; height: 30px;
-    background: #000; border-radius: 20px;
-    z-index: 100;
-    cursor: grab;
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    width: 100px; height: 28px; background: #000; border-radius: 20px; z-index: 100;
 }
 
-/* ส่วนหัวแชท */
+/* Status Bar */
+.status-bar {
+    height: 40px; display: flex; justify-content: space-between;
+    padding: 5px 25px 0; align-items: center; color: white; font-weight: bold; font-size: 12px; z-index: 90;
+    text-shadow: 0 1px 2px black;
+}
+
+/* --- Home Screen --- */
+.app-grid {
+    padding: 60px 20px 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; align-content: start;
+}
+.app-icon {
+    width: 60px; height: 60px; border-radius: 14px; display: flex; justify-content: center; align-items: center;
+    font-size: 28px; color: white; margin-bottom: 5px; cursor: pointer; transition: transform 0.1s;
+}
+.app-icon:hover { transform: scale(1.05); }
+.app-label { text-align: center; color: white; font-size: 11px; text-shadow: 0 1px 3px black; }
+
+/* --- App Window (หน้าต่างแอพ) --- */
+.app-window {
+    position: absolute; inset: 0; background: #fff; z-index: 50;
+    transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    display: flex; flex-direction: column;
+}
+.app-window.active { transform: translateY(0); }
+
+/* --- Chat App Styles --- */
 .chat-header {
-    padding: 45px 15px 10px;
-    background: #f8f8f8;
-    border-bottom: 1px solid #ddd;
-    display: flex; align-items: center; gap: 10px;
+    padding: 45px 15px 10px; background: #f5f5f5; border-bottom: 1px solid #ddd;
+    display: flex; align-items: center; gap: 10px; font-weight: bold;
 }
-.char-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-.char-name { font-weight: bold; font-size: 16px; }
-
-/* พื้นที่แชท */
-.chat-body {
-    flex: 1; background: #e5ddd5; /* สีพื้นหลัง WhatsApp */
-    padding: 15px; overflow-y: auto;
-    display: flex; flex-direction: column; gap: 8px;
+.chat-body { flex: 1; background: #e5ddd5; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+.msg-bubble {
+    padding: 8px 12px; border-radius: 15px; max-width: 80%; font-size: 14px; position: relative; word-wrap: break-word;
 }
-
-.msg {
-    padding: 8px 12px; border-radius: 12px;
-    max-width: 80%; font-size: 14px; word-wrap: break-word;
-    position: relative;
-}
-.msg-user {
-    background: #dcf8c6; align-self: flex-end; /* สีเขียวของผู้ใช้ */
-    border-top-right-radius: 0;
-}
-.msg-bot {
-    background: #fff; align-self: flex-start; /* สีขาวของบอท */
-    border-top-left-radius: 0;
-}
+.msg-user { background: #dcf8c6; align-self: flex-end; border-top-right-radius: 4px; }
+.msg-bot { background: white; align-self: flex-start; border-top-left-radius: 4px; }
 .msg-img { width: 100%; border-radius: 8px; margin-top: 5px; }
 
-/* ส่วนพิมพ์ข้อความ */
-.input-area {
-    padding: 10px; background: #f0f0f0;
-    display: flex; align-items: center; gap: 8px;
-    position: relative;
-}
-.chat-input {
-    flex: 1; padding: 10px; border-radius: 20px; border: none; outline: none;
-}
-.icon-btn {
-    font-size: 20px; color: #555; cursor: pointer; padding: 5px;
-}
-.send-btn { color: #007aff; }
+/* Input Area */
+.chat-footer { padding: 10px; background: #f0f0f0; display: flex; align-items: center; gap: 8px; position: relative; }
+.chat-input { flex: 1; padding: 8px 15px; border-radius: 20px; border: none; outline: none; }
 
-/* --- Meme Drawer (ลิ้นชักมีม) --- */
-.meme-drawer {
-    position: absolute; bottom: 60px; left: 0; width: 100%;
-    height: 200px; background: white;
-    border-top-left-radius: 20px; border-top-right-radius: 20px;
-    box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
-    transform: translateY(110%); /* ซ่อนไว้ข้างล่าง */
-    transition: transform 0.3s ease;
-    z-index: 50;
-    padding: 10px;
+/* Meme Popup */
+.meme-popup {
+    position: absolute; bottom: 60px; left: 10px; right: 10px;
+    background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+    border-radius: 15px; padding: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    display: none; z-index: 60;
+    grid-template-columns: repeat(3, 1fr); gap: 5px;
 }
-.meme-drawer.open { transform: translateY(0); }
+.meme-item { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: pointer; }
 
-.meme-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
-    height: 100%; overflow-y: auto;
+/* Home Bar */
+.home-bar {
+    position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 5px; background: white; border-radius: 100px;
+    z-index: 200; cursor: pointer; opacity: 0.7;
 }
-.meme-thumb {
-    width: 100%; aspect-ratio: 1; object-fit: cover;
-    border-radius: 8px; cursor: pointer; border: 1px solid #ddd;
-}
-.meme-thumb:hover { opacity: 0.8; }
+.home-bar:hover { opacity: 1; }
