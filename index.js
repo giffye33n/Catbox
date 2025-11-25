@@ -310,3 +310,133 @@ jQuery(async () => {
         }
     }, 500); // Check every half second
 });
+
+// ==========================================
+// INITIALIZATION AND EVENT HOOKS
+// ==========================================
+
+jQuery(async () => {
+    // 1. Clean up old elements
+    $('#silly-stats-root, #stats-trigger-btn').remove();
+    
+    // 2. Add Font Awesome (If not already loaded by ST)
+    if ($('link[href*="font-awesome"]').length === 0) {
+        $('head').append('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">');
+    }
+    
+    // 3. Build and Append the UI
+    $('body').append(renderStatsUI());
+
+    // 4. Add the Floating Trigger Button
+    $('body').append(`<div id="stats-trigger-btn" title="Toggle Character Stats"><i class="fa-solid fa-chart-bar"></i></div>`);
+
+    // 5. Setup Toggle Event
+    $('#stats-trigger-btn').on('click', function() {
+        $('#silly-stats-root').toggle();
+    });
+
+    // 6. Hook into SillyTavern's Character Change Event (Polling)
+    let lastCharName = null;
+    let currentCharData = null; // Store the currently loaded character data
+
+    setInterval(() => {
+        if (typeof SillyTavern === 'undefined' || !SillyTavern.getContext) {
+            return;
+        }
+
+        const context = SillyTavern.getContext();
+        const currentChar = context.current_char;
+        
+        if (currentChar) {
+            const charName = currentChar.name;
+            if (charName !== lastCharName) {
+                // Character changed, display new stats (but keep UI hidden until user clicks the button)
+                currentCharData = currentChar;
+                displayCharacterStats(currentCharData, false); // Pass false to prevent immediate showing
+                lastCharName = charName;
+            }
+            // Ensure the trigger button is visible when a character is selected
+            $('#stats-trigger-btn').show(); 
+
+        } else {
+            // No character selected
+            currentCharData = null;
+            $('#silly-stats-root').hide(); // Hide the stats panel
+            $('#stats-trigger-btn').hide(); // Hide the trigger button
+            lastCharName = null;
+        }
+    }, 500);
+});
+
+// Update the displayCharacterStats function to accept a 'show' parameter
+function displayCharacterStats(char, show = false) {
+    if (!char) {
+        $('#silly-stats-root').hide();
+        return;
+    }
+    // ... (All existing stat rendering logic) ...
+    // Note: The stat rendering logic should remain exactly the same as before.
+    
+    const stats = generateCharacterStats(char.name);
+    
+    // Update Header
+    $('#stats-avatar').attr('src', `/characters/${char.avatar}`).attr('onerror', "this.src='/img/question_mark.png';");
+    $('#stats-name').text(char.name);
+    $('#stats-class').text(`Class: ${stats.class}`);
+    
+    // ... [The rest of the stat rendering logic goes here] ...
+    
+    // --- (REPLACE THIS SECTION) ---
+    // Update Resources
+    const hp_percent = (stats.HP.current / stats.HP.max) * 100;
+    const mp_percent = (stats.MP.current / stats.MP.max) * 100;
+    const stamina_percent = stats.Stamina.current;
+    
+    $('#stat-hp-val').text(`${stats.HP.current.toLocaleString()} / ${stats.HP.max.toLocaleString()}`);
+    $('#stat-hp-bar').css('width', `${hp_percent}%`);
+    
+    $('#stat-mp-val').text(`${stats.MP.current} / ${stats.MP.max}`);
+    $('#stat-mp-bar').css('width', `${mp_percent}%`);
+    
+    $('#stat-stamina-val').text(`${stats.Stamina.current} / 100`);
+    $('#stat-stamina-bar').css('width', `${stamina_percent}%`);
+
+    $('#stat-hp-regen').text(stats.HP_Regen);
+    $('#stat-mp-regen').text(stats.MP_Regen);
+
+    // Update Base Attributes
+    $('#stat-str').text(stats.Base.STR);
+    $('#stat-dex').text(stats.Base.DEX);
+    $('#stat-agi').text(stats.Base.AGI);
+    $('#stat-int').text(stats.Base.INT);
+    $('#stat-wis').text(stats.Base.WIS);
+    $('#stat-con').text(stats.Base.CON);
+    $('#stat-luk').text(stats.Base.LUK);
+
+    // Update Combat Stats
+    $('#stat-atk').text(stats.Combat.ATK.toLocaleString());
+    $('#stat-matk').text(stats.Combat.MATK.toLocaleString());
+    $('#stat-def').text(stats.Combat.DEF.toLocaleString());
+    $('#stat-mdef').text(stats.Combat.MDEF.toLocaleString());
+    $('#stat-acc').text(stats.Combat.ACC);
+    $('#stat-eva').text(stats.Combat.EVA);
+    $('#stat-crit-rate').text(`${stats.Combat.CRIT_RATE.toFixed(1)}%`);
+    $('#stat-crit-dmg').text(`${stats.Combat.CRIT_DMG}%`);
+
+    // Update Defense & Resistances
+    $('#stat-block').text(`${stats.Defense.BLOCK}%`);
+    $('#stat-parry').text(`${stats.Defense.PARRY}%`);
+    $('#stat-dr').text(`${stats.Defense.Damage_Reduction}%`);
+    $('#stat-ice-res').text(stats.Elementals.Ice_RES);
+    $('#stat-poi-res').text(stats.Elementals.Poison_RES);
+
+    // Update Elemental Attributes
+    $('#stat-fire-atk').text(stats.Elementals.Fire_ATK);
+    $('#stat-light-dmg').text(stats.Elementals.Light_DMG);
+    // --- (END OF REPLACEMENT) ---
+
+    // Only show if explicitly requested (or if it was previously visible)
+    if (show || $('#silly-stats-root').is(':visible')) {
+        $('#silly-stats-root').show();
+    }
+}
