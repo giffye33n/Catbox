@@ -1,63 +1,94 @@
-// The main script for the extension
-// The following are examples of some basic extension functionality
+import { CONFIG } from './config.js';
+import { renderGallery, renderChatApp } from './apps.js';
 
-//You'll likely need to import extension_settings, getContext, and loadExtensionSettings from extensions.js
-import { extension_settings, getContext, loadExtensionSettings } from "../../../extensions.js";
+const ROOT_ID = 'silly-phone-root';
 
-//You'll likely need to import some other functions from the main script
-import { saveSettingsDebounced } from "../../../../script.js";
+// สร้าง HTML โครงสร้างมือถือ
+const phoneHTML = `
+<div id="${ROOT_ID}">
+    <div class="phone-case">
+        <div class="screen" style="background-image: url('${CONFIG.wallpaper}');">
+            <div class="notch"></div>
+            <div class="status-bar">
+                <span id="phone-clock">12:00</span>
+                <span><i class="fa-solid fa-wifi"></i> &nbsp; <i class="fa-solid fa-battery-three-quarters"></i></span>
+            </div>
+            
+            <div class="app-grid" id="home-screen">
+                <div class="app-group" data-app="memes">
+                    <div class="app-icon bg-meme"><i class="fa-solid fa-images"></i></div>
+                    <div class="app-label">CatBox</div>
+                </div>
+                <div class="app-group" data-app="chat">
+                    <div class="app-icon bg-chat"><i class="fa-solid fa-comment-dots"></i></div>
+                    <div class="app-label">Chat</div>
+                </div>
+                <div class="app-group">
+                    <div class="app-icon bg-set"><i class="fa-solid fa-gear"></i></div>
+                    <div class="app-label">Settings</div>
+                </div>
+            </div>
 
-// Keep track of where your extension is located, name should match repo name
-const extensionName = "st-extension-example";
-const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
-const extensionSettings = extension_settings[extensionName];
-const defaultSettings = {};
+            <div id="app-memes" class="app-window">
+                <div class="app-header">CatBox Memes</div>
+                <div class="app-content" id="meme-content"></div>
+            </div>
 
+            <div id="app-chat" class="app-window">
+                <div class="app-header">Messenger</div>
+                <div class="app-content" id="chat-content" style="overflow:hidden; display:flex; flex-direction:column;"></div>
+            </div>
 
- 
-// Loads the extension settings if they exist, otherwise initializes them to the defaults.
-async function loadSettings() {
-  //Create the settings if they don't exist
-  extension_settings[extensionName] = extension_settings[extensionName] || {};
-  if (Object.keys(extension_settings[extensionName]).length === 0) {
-    Object.assign(extension_settings[extensionName], defaultSettings);
-  }
+            <div class="home-bar" id="home-btn"></div>
+        </div>
+    </div>
+</div>
+`;
 
-  // Updating settings in the UI
-  $("#example_setting").prop("checked", extension_settings[extensionName].example_setting).trigger("input");
-}
-
-// This function is called when the extension settings are changed in the UI
-function onExampleInput(event) {
-  const value = Boolean($(event.target).prop("checked"));
-  extension_settings[extensionName].example_setting = value;
-  saveSettingsDebounced();
-}
-
-// This function is called when the button is clicked
-function onButtonClick() {
-  // You can do whatever you want here
-  // Let's make a popup appear with the checked setting
-  toastr.info(
-    `The checkbox is ${extension_settings[extensionName].example_setting ? "checked" : "not checked"}`,
-    "A popup appeared because you clicked the button!"
-  );
-}
-
-// This function is called when the extension is loaded
 jQuery(async () => {
-  // This is an example of loading HTML from a file
-  const settingsHtml = await $.get(`${extensionFolderPath}/example.html`);
+    // 1. Inject HTML
+    $('body').append(phoneHTML);
+    const root = $(`#${ROOT_ID}`);
 
-  // Append settingsHtml to extensions_settings
-  // extension_settings and extensions_settings2 are the left and right columns of the settings menu
-  // Left should be extensions that deal with system functions and right should be visual/UI related 
-  $("#extensions_settings").append(settingsHtml);
+    // 2. Inject App Content
+    document.getElementById('meme-content').appendChild(renderGallery());
+    document.getElementById('chat-content').appendChild(renderChatApp());
 
-  // These are examples of listening for events
-  $("#my_button").on("click", onButtonClick);
-  $("#example_setting").on("input", onExampleInput);
+    // 3. Logic: นาฬิกา
+    setInterval(() => {
+        const now = new Date();
+        $('#phone-clock').text(now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0'));
+    }, 1000);
 
-  // Load settings when starting things up (if you have any)
-  loadSettings();
+    // 4. Logic: เปิดแอพ
+    $('.app-group').on('click', function() {
+        const appName = $(this).data('app');
+        if(appName) {
+            $(`#app-${appName}`).addClass('open');
+        }
+    });
+
+    // 5. Logic: ปุ่ม Home (ปิดแอพ)
+    $('#home-btn').on('click', function() {
+        $('.app-window').removeClass('open');
+    });
+
+    // 6. Logic: ปุ่มเปิดมือถือ (สร้างที่ Top Bar)
+    const toggleBtn = $(`
+        <div class="drawer-content phone-toggle-icon" title="Open Phone">
+            <i class="fa-solid fa-mobile-screen"></i>
+        </div>
+    `);
+    
+    // หาที่วางปุ่ม (วางไว้แถวๆปุ่ม Extensions)
+    // หมายเหตุ: SillyTavern แต่ละเวอร์ชั่น ID อาจต่างกันเล็กน้อย แต่ปกติจะใช้ .extensionsMenu
+    $('#extensionsMenu').parent().prepend(toggleBtn); 
+
+    toggleBtn.on('click', () => {
+        if(root.css('display') === 'none') {
+            root.css('display', 'block');
+        } else {
+            root.fadeOut(200);
+        }
+    });
 });
