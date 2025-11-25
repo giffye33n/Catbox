@@ -1,21 +1,7 @@
-/* --- ปุ่มเปิดมือถือ --- */
-#phone-trigger-btn {
-    position: fixed; bottom: 30px; left: 30px;
-    width: 60px; height: 60px;
-    background: linear-gradient(135deg, #00c6ff, #0072ff);
-    border-radius: 50%;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    z-index: 20001;
-    display: flex; justify-content: center; align-items: center;
-    color: white; font-size: 28px; cursor: pointer;
-    border: 3px solid white; transition: transform 0.2s;
-}
-#phone-trigger-btn:hover { transform: scale(1.1); }
-
-/* --- ตัวเครื่อง --- */
+/* --- Global Phone Container (Draggable) --- */
 #silly-phone-root {
-    position: fixed; top: 100px; left: 200px;
-    width: 340px; height: 680px;
+    position: fixed; top: 50px; left: 100px;
+    width: 360px; height: 720px; /* ขยายขนาดขึ้นเล็กน้อย */
     z-index: 20000;
     font-family: 'Segoe UI', sans-serif;
     display: none;
@@ -23,45 +9,72 @@
 
 .phone-case {
     width: 100%; height: 100%;
-    background: #121212; border-radius: 45px; padding: 12px;
-    box-shadow: 0 30px 80px rgba(0,0,0,0.8);
-    border: 3px solid #333; position: relative; cursor: move;
+    background: #111; border-radius: 50px; padding: 15px;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.9);
+    border: 4px solid #333; position: relative; cursor: move; 
 }
 
+/* --- Screen and System Chrome --- */
 .screen {
     width: 100%; height: 100%;
-    background-color: #000; background-size: cover; background-position: center;
-    border-radius: 35px; overflow: hidden; position: relative;
+    background-color: #222; 
+    background-size: cover; background-position: center;
+    border-radius: 40px; overflow: hidden; position: relative;
     cursor: default; display: flex; flex-direction: column;
 }
 
-.dynamic-island {
-    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-    width: 100px; height: 28px; background: #000; border-radius: 20px; z-index: 100;
-}
-
+/* Status Bar */
 .status-bar {
-    height: 40px; display: flex; justify-content: space-between;
-    padding: 5px 25px 0; align-items: center; color: white; font-size: 12px; z-index: 90;
-    text-shadow: 0 1px 2px black; font-weight: bold;
+    height: 35px; display: flex; justify-content: space-between;
+    padding: 5px 20px 0; align-items: center; color: white; font-size: 11px; z-index: 90;
+    font-weight: 600; text-shadow: 0 1px 1px black;
+}
+.dynamic-island {
+    position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 25px; background: #000; border-radius: 20px; z-index: 100;
 }
 
-/* --- App Grid --- */
-.app-grid { padding: 60px 20px 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-.app-icon-wrap { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: transform 0.1s; }
+/* Home Indicator / Navigation Bar */
+.home-bar {
+    position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    width: 140px; height: 5px; background: white; border-radius: 100px;
+    z-index: 200; cursor: pointer; opacity: 0.8;
+}
+
+/* --- Home Screen / Launcher --- */
+#app-launcher {
+    flex: 1; padding: 50px 15px 50px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 5px;
+    overflow-y: auto;
+    align-content: start;
+}
+.app-icon-wrap { 
+    display: flex; flex-direction: column; align-items: center; cursor: pointer; 
+    transition: transform 0.1s; padding: 5px 0;
+}
 .app-icon-wrap:hover { transform: scale(1.05); }
 .app-icon {
-    width: 60px; height: 60px; border-radius: 14px; display: flex; justify-content: center; align-items: center;
-    font-size: 26px; color: white; margin-bottom: 5px;
+    width: 50px; height: 50px; border-radius: 12px; display: flex; justify-content: center; align-items: center;
+    font-size: 24px; color: white; margin-bottom: 3px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
-.app-lbl { color: white; font-size: 11px; text-shadow: 0 1px 3px black; text-align: center; }
+.app-lbl { color: white; font-size: 10px; text-shadow: 0 1px 3px black; text-align: center; max-width: 55px; }
 
-/* Colors */
+/* Icon Colors */
+.bg-phone { background: linear-gradient(135deg, #007bff, #00d2ff); }
+.bg-con { background: linear-gradient(135deg, #00a4eb, #0084d4); }
 .bg-chat { background: linear-gradient(135deg, #25D366, #128C7E); }
-.bg-con { background: linear-gradient(135deg, #4facfe, #00f2fe); }
-.bg-gal { background: linear-gradient(135deg, #fa709a, #fee140); }
+.bg-set { background: linear-gradient(135deg, #888, #444); }
+.bg-web { background: linear-gradient(135deg, #4285F4, #34A853); }
+.bg-note { background: linear-gradient(135deg, #ffc107, #ff9800); }
+.bg-cal { background: linear-gradient(135deg, #f44336, #e53935); }
+.bg-gal { background: linear-gradient(135deg, #ff9966, #ff5e62); }
+.bg-social { background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); }
+.bg-media { background: linear-gradient(135deg, #ff0000, #ff4d4d); }
+.bg-game { background: linear-gradient(135deg, #5e35b1, #3949ab); }
+.bg-tools { background: linear-gradient(135deg, #333, #555); }
 
-/* --- Windows --- */
+/* --- App Window --- */
 .app-window {
     position: absolute; inset: 0; background: #fff; z-index: 50;
     transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -69,37 +82,37 @@
 }
 .app-window.active { transform: translateY(0); }
 
-/* --- Contact List Styles (NEW) --- */
+/* App Header (for back navigation) */
+.app-header {
+    padding: 45px 15px 10px; background: #f5f5f5; border-bottom: 1px solid #ddd;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.back-btn { font-weight: normal; color: #007aff; cursor: pointer; font-size: 14px; }
+.app-title { font-weight: bold; font-size: 18px; }
+
+/* Content Area */
+.app-content { flex: 1; overflow-y: auto; background: white; padding: 15px; text-align: center; color: #999; }
+
+/* --- Contacts App Styles --- */
 .contact-list { flex: 1; overflow-y: auto; background: #fff; }
 .contact-item {
     display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer;
 }
-.contact-item:hover { background: #f9f9f9; }
+.contact-item:hover { background: #f5f5f5; }
 .c-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; margin-right: 15px; background: #ddd; }
-.c-info { display: flex; flex-direction: column; }
 .c-name { font-weight: bold; font-size: 15px; color: #333; }
-.c-status { font-size: 12px; color: #888; }
 
-/* --- Chat Styles --- */
-.chat-head {
-    padding: 45px 15px 10px; background: #f5f5f5; border-bottom: 1px solid #ddd;
-    display: flex; align-items: center; gap: 10px; font-weight: bold;
-    justify-content: space-between;
-}
-.back-btn { font-weight: normal; color: #007aff; cursor: pointer; font-size: 14px; }
+/* --- Chat App Styles --- */
 .chat-body { flex: 1; background: #e5ddd5; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-
-/* Bubbles */
 .msg-bubble { padding: 8px 12px; border-radius: 15px; max-width: 75%; font-size: 14px; word-wrap: break-word; }
 .msg-user { background: #dcf8c6; align-self: flex-end; }
 .msg-bot { background: white; align-self: flex-start; }
 .msg-img { width: 100%; border-radius: 8px; margin-top: 5px; }
 
-/* Input */
-.chat-foot { padding: 10px; background: #f0f0f0; display: flex; align-items: center; gap: 8px; }
+/* Input & Meme Drawer */
+.chat-foot { padding: 10px; background: #f0f0f0; display: flex; align-items: center; gap: 8px; position: relative; }
 .chat-input { flex: 1; padding: 8px 15px; border-radius: 20px; border: none; outline: none; }
 
-/* Meme Drawer */
 .meme-drawer {
     position: absolute; bottom: 0; left: 0; right: 0; height: 250px;
     background: white; border-top-left-radius: 20px; border-top-right-radius: 20px;
@@ -109,10 +122,3 @@
 .meme-drawer.show { transform: translateY(0); }
 .meme-grid { padding: 10px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; overflow-y: auto; }
 .meme-thumb { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: pointer; }
-
-/* Home Bar */
-.home-bar {
-    position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
-    width: 120px; height: 5px; background: white; border-radius: 100px;
-    z-index: 200; cursor: pointer; opacity: 0.8;
-}
