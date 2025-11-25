@@ -1,9 +1,9 @@
 {
-    "display_name": "Eclaircatphone",
-    "author": "Eclair",
-    "version": "9.0.0",
+    "display_name": "statuscalir V1",
+    "author": "eclair",
+    "version": "1.0.0",
     "css": "style.css",
     "js": "index.js",
     "type": "module",
-    "description": "Full Mobile OS UI/UX Simulation with Text-Only Ghost Chat and Bot Meme Capability."
+    "description": "A detailed RPG Stats Viewer for SillyTavern characters, displaying randomized but persistent combat attributes."
 }
