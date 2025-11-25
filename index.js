@@ -8,47 +8,31 @@ const CONFIG = {
         "https://files.catbox.moe/mds278.jpg", // Meme 2
         "https://files.catbox.moe/27e41w.jpg"  // Meme 3
     ],
-    // รายการแอพพลิเคชันทั้งหมดตามที่คุณต้องการ
     apps: [
-        // 1) การโทร / สื่อสาร
-        { id: 'phone', label: 'Phone', icon: 'fa-phone', color: 'bg-phone', enabled: false },
-        { id: 'contacts', label: 'Contacts', icon: 'fa-address-book', color: 'bg-con', enabled: true },
-        { id: 'messages', label: 'Messages', icon: 'fa-comment', color: 'bg-phone', enabled: false },
-        // 2) อินเทอร์เน็ต / การใช้งานออนไลน์
+        { id: 'phone', label: 'Phone', icon: 'fa-phone', color: 'bg-phone', enabled: true }, // ACTIVE
+        { id: 'contacts', label: 'Contacts', icon: 'fa-address-book', color: 'bg-con', enabled: true }, 
+        { id: 'chat_app', label: 'WhatsApp', icon: 'fa-whatsapp', color: 'bg-chat', enabled: true }, 
+        { id: 'settings', label: 'Settings', icon: 'fa-gear', color: 'bg-set', enabled: true }, // ACTIVE
+        { id: 'notes', label: 'Notes', icon: 'fa-note-sticky', color: 'bg-note', enabled: true }, // ACTIVE
+        { id: 'gallery', label: 'Photos', icon: 'fa-images', color: 'bg-gal', enabled: true }, 
+        // DUMMY APPS
         { id: 'browser', label: 'Chrome', icon: 'fa-globe', color: 'bg-web', enabled: false },
         { id: 'calendar', label: 'Calendar', icon: 'fa-calendar', color: 'bg-cal', enabled: false },
         { id: 'weather', label: 'Weather', icon: 'fa-cloud-sun', color: 'bg-phone', enabled: false },
-        { id: 'clock', label: 'Clock', icon: 'fa-clock', color: 'bg-tools', enabled: false },
-        { id: 'maps', label: 'Maps', icon: 'fa-map-location-dot', color: 'bg-web', enabled: false },
-        // 3) รูปภาพ / วิดีโอ
-        { id: 'camera', label: 'Camera', icon: 'fa-camera', color: 'bg-tools', enabled: false },
-        { id: 'gallery', label: 'Photos', icon: 'fa-images', color: 'bg-gal', enabled: true }, // Gallery is now "Photos"
-        // 4) ไฟล์ / จัดการข้อมูล
-        { id: 'files', label: 'Files', icon: 'fa-folder', color: 'bg-tools', enabled: false },
-        // 5) เครื่องมือพื้นฐาน
-        { id: 'calc', label: 'Calculator', icon: 'fa-calculator', color: 'bg-tools', enabled: false },
-        { id: 'notes', label: 'Notes', icon: 'fa-note-sticky', color: 'bg-note', enabled: false },
-        { id: 'voice', label: 'Voice Rec.', icon: 'fa-microphone', color: 'bg-tools', enabled: false },
-        // 6) ระบบ / การตั้งค่า
-        { id: 'settings', label: 'Settings', icon: 'fa-gear', color: 'bg-set', enabled: false },
-        { id: 'store', label: 'Play Store', icon: 'fa-bag-shopping', color: 'bg-web', enabled: false },
-        // 🎨 แอพโซเชียลที่มักมีกันเอง (เน้นตัวที่ใช้คุยได้)
-        { id: 'chat_app', label: 'WhatsApp', icon: 'fa-whatsapp', color: 'bg-chat', enabled: true }, // This is the main chat app
-        { id: 'line', label: 'LINE', icon: 'fa-line', color: 'bg-chat', enabled: false },
-        { id: 'discord', label: 'Discord', icon: 'fa-discord', color: 'bg-set', enabled: false },
         { id: 'tiktok', label: 'TikTok', icon: 'fa-tiktok', color: 'bg-social', enabled: false },
-        { id: 'x', label: 'X', icon: 'fa-x-twitter', color: 'bg-set', enabled: false },
-        // 🎧 แอพความบันเทิง / Media
         { id: 'youtube', label: 'YouTube', icon: 'fa-youtube', color: 'bg-media', enabled: false },
-        { id: 'spotify', label: 'Spotify', icon: 'fa-spotify', color: 'bg-media', enabled: false },
-        // 💰 การเงิน / ธนาคาร (Dummy)
         { id: 'bank', label: 'Bank App', icon: 'fa-building-columns', color: 'bg-tools', enabled: false },
-    ]
+    ],
+    device: {
+        model: 'SillyPhone 15 Pro Max',
+        os: 'SillyOS 1.0',
+        storage: '256GB'
+    }
 };
 
 let activePhoneChar = null; 
 let phoneChatHistory = [];
-let currentApp = 'launcher';
+let localNotes = "Write your private notes here..."; // For Notes app
 
 // ==========================================
 // 2. INITIALIZATION AND SETUP
@@ -64,12 +48,9 @@ jQuery(async () => {
     const phoneHTML = buildPhoneUI();
     $('body').append(phoneHTML);
     
-    // Load App Icons onto Launcher
     loadAppIcons();
-    // Load Memes into Drawer/Gallery
     loadMemes();
 
-    // Setup Event Listeners
     setupDragAndDrop();
     setupNavigation();
     setupChatEvents();
@@ -80,7 +61,7 @@ jQuery(async () => {
 // 3. UI CONSTRUCTION
 // ==========================================
 function buildAppWindow(id, title) {
-    // สร้างโครงสร้าง App Window สำหรับแอพที่ไม่ได้ระบุไว้ในโค้ด
+    // สร้างโครงสร้าง App Window ที่ว่างเปล่าสำหรับ Dummy App
     return `
         <div id="app-${id}" class="app-window" data-parent="launcher">
             <div class="app-header">
@@ -88,10 +69,9 @@ function buildAppWindow(id, title) {
                 <span class="app-title">${title}</span>
                 <span></span>
             </div>
-            <div class="app-content">
-                <p>--- ${title} ---</p>
+            <div class="app-content app-content-center">
+                <p style="margin-top: 100px; font-size: 16px;">--- ${title} ---</p>
                 <p>This is a dummy app. Functionality not implemented yet.</p>
-                <p>System UI (Status Bar, Home Bar) is active.</p>
             </div>
         </div>
     `;
@@ -101,58 +81,18 @@ function buildPhoneUI() {
     let appWindows = '';
     
     // 1. Build Dummy App Windows
-    CONFIG.apps.forEach(app => {
-        if (!app.enabled && app.id !== 'chat_app') {
-            appWindows += buildAppWindow(app.id, app.label);
-        }
+    CONFIG.apps.filter(app => !app.enabled).forEach(app => {
+        appWindows += buildAppWindow(app.id, app.label);
     });
 
-    // 2. Build Active App Windows (Contacts, Chat, Gallery) - Copying V7/V8 structure
-    appWindows += `
-        <div id="app-contacts" class="app-window" data-parent="launcher">
-            <div class="app-header">
-                <span></span>
-                <span class="app-title">Contacts</span>
-                <span></span>
-            </div>
-            <div class="contact-list" id="contact-list-container"></div>
-        </div>
-
-        <div id="app-chat_app" class="app-window" data-parent="contacts">
-            <div class="app-header">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div class="back-btn" onclick="openApp('contacts')">❮ Lists</div>
-                    <img src="" id="chat-av" style="width:30px; height:30px; border-radius:50%; display:none;">
-                    <span id="chat-nm">Select Contact</span>
-                </div>
-            </div>
-            <div class="chat-body" id="chat-msgs">
-                <div style="text-align:center; color:#999; margin-top:20px; font-size:12px;">
-                    Select a contact to start chatting privately.
-                </div>
-            </div>
-            <div class="chat-foot">
-                <i class="fa-regular fa-face-smile" style="font-size:20px; color:#555; cursor:pointer;" id="btn-meme"></i>
-                <input type="text" class="chat-input" id="chat-inp" placeholder="Message...">
-                <i class="fa-solid fa-paper-plane" style="font-size:20px; color:#007aff; cursor:pointer;" id="btn-send"></i>
-            </div>
-            
-            <div class="meme-drawer" id="meme-drawer">
-                <div style="padding:10px; text-align:center; border-bottom:1px solid #eee; color:#ccc;">Select Meme (Swipe down to close)</div>
-                <div class="meme-grid" id="meme-grid"></div>
-            </div>
-        </div>
-        
-        <div id="app-gallery" class="app-window" data-parent="launcher" style="background:#000;">
-            <div class="app-header" style="background:#111; color:white; border:none;">
-                <span class="back-btn" onclick="openApp('launcher')" style="color:#eee;">❮ Back</span>
-                <span class="app-title" style="color:white;">Photos</span>
-                <span></span>
-            </div>
-            <div class="meme-grid" id="gal-grid"></div>
-        </div>
-    `;
-
+    // 2. Build Active App Windows (ใช้ฟังก์ชัน render แยกไป)
+    appWindows += renderAppContacts();
+    appWindows += renderAppChat();
+    appWindows += renderAppGallery();
+    appWindows += renderAppPhone(); // New active app
+    appWindows += renderAppSettings(); // New active app
+    appWindows += renderAppNotes(); // New active app
+    
     return `
     <div id="silly-phone-root">
         <div class="phone-case" id="phone-drag-zone">
@@ -177,6 +117,7 @@ function buildPhoneUI() {
 
 function loadAppIcons() {
     const launcher = $('#app-launcher');
+    launcher.empty();
     CONFIG.apps.forEach(app => {
         const iconHtml = $(`
             <div class="app-icon-wrap" onclick="openApp('${app.id}')">
@@ -193,12 +134,14 @@ function loadAppIcons() {
 function loadMemes() {
     const memeGrid = $('#meme-grid');
     const galGrid = $('#gal-grid');
+    memeGrid.empty(); galGrid.empty();
+    
     CONFIG.memes.forEach(url => {
         // Meme Drawer
         const img = $(`<img src="${url}" class="meme-thumb">`);
         img.click(() => {
             $('#meme-drawer').removeClass('show');
-            sendGhostMsg(url, true); // User sends meme
+            sendGhostMsg(url, true);
         });
         memeGrid.append(img);
 
@@ -212,29 +155,24 @@ function loadMemes() {
 // ==========================================
 function setupNavigation() {
     window.openApp = (appName) => {
-        // Hide all app windows first
         $('.app-window').removeClass('active');
-        
-        // Show the requested app
         const appElement = $(`#app-${appName}`);
         appElement.addClass('active');
 
-        // Special logic for active apps
         if (appName === 'contacts') loadContacts();
-        if (appName === 'chat_app' && !activePhoneChar) openApp('contacts'); // Go to contacts if chat is opened without selection
+        if (appName === 'chat_app' && !activePhoneChar) openApp('contacts');
+        if (appName === 'notes') $('#notes-area').val(localNotes);
         
-        currentApp = appName;
+        // Hide meme drawer when switching apps
+        $('#meme-drawer').removeClass('show');
     };
 
     $('#btn-home').click(() => {
-        // Return to launcher/home screen
         openApp('launcher');
     });
     
-    // Initial State
-    openApp('launcher');
+    openApp('launcher'); // Start on home screen
 
-    // Toggle Phone visibility
     $('#phone-trigger-btn').click(() => {
         $('#silly-phone-root').fadeToggle(300);
     });
@@ -244,12 +182,12 @@ function setupNavigation() {
 // 5. DRAG & DROP LOGIC
 // ==========================================
 function setupDragAndDrop() {
+    // (Existing Drag & Drop logic remains here)
     const el = document.getElementById('silly-phone-root');
     const handle = document.getElementById('phone-drag-zone');
     let isDragging=false, startX, startY, initLeft, initTop;
 
     handle.addEventListener('mousedown', (e) => {
-        // Do not drag if mouse down is on the screen/content area
         if(e.target.closest('.screen') && !e.target.closest('.home-bar')) return; 
         isDragging=true;
         startX=e.clientX; startY=e.clientY;
@@ -268,9 +206,22 @@ function setupDragAndDrop() {
 }
 
 // ==========================================
-// 6. CONTACTS LOGIC
+// 6. CONTACTS & CHAT LOGIC
 // ==========================================
-function loadContacts() {
+function renderAppContacts() {
+    return `
+        <div id="app-contacts" class="app-window" data-parent="launcher">
+            <div class="app-header">
+                <span></span>
+                <span class="app-title">Contacts</span>
+                <span></span>
+            </div>
+            <div class="contact-list" id="contact-list-container"></div>
+        </div>
+    `;
+}
+
+function loadContacts() { /* Existing logic to load characters from ST */
     const listContainer = $('#contact-list-container');
     listContainer.empty();
     
@@ -313,6 +264,36 @@ function loadContacts() {
     });
 }
 
+function renderAppChat() {
+    // Chat app is now 'chat_app' (WhatsApp)
+    return `
+        <div id="app-chat_app" class="app-window" data-parent="contacts">
+            <div class="app-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="back-btn" onclick="openApp('contacts')">❮ Lists</div>
+                    <img src="" id="chat-av" style="width:30px; height:30px; border-radius:50%; display:none;">
+                    <span id="chat-nm">Select Contact</span>
+                </div>
+            </div>
+            <div class="chat-body" id="chat-msgs">
+                <div style="text-align:center; color:#999; margin-top:20px; font-size:12px;">
+                    Select a contact to start chatting privately.
+                </div>
+            </div>
+            <div class="chat-foot">
+                <i class="fa-regular fa-face-smile" style="font-size:20px; color:#555; cursor:pointer;" id="btn-meme"></i>
+                <input type="text" class="chat-input" id="chat-inp" placeholder="Message...">
+                <i class="fa-solid fa-paper-plane" style="font-size:20px; color:#007aff; cursor:pointer;" id="btn-send"></i>
+            </div>
+            
+            <div class="meme-drawer" id="meme-drawer">
+                <div style="padding:10px; text-align:center; border-bottom:1px solid #eee; color:#ccc;">Select Meme (Swipe down to close)</div>
+                <div class="meme-grid" id="meme-grid"></div>
+            </div>
+        </div>
+    `;
+}
+
 function startChatWithActiveChar() {
     if(!activePhoneChar) return;
 
@@ -320,27 +301,25 @@ function startChatWithActiveChar() {
     $('#chat-av').attr('src', activePhoneChar.avatar).show();
     
     $('#chat-msgs').html(`<div style="text-align:center; color:#999; margin-top:10px; font-size:12px;">Private Chat with ${activePhoneChar.name}</div>`);
-    phoneChatHistory = []; // Reset history for the new contact
+    phoneChatHistory = [];
 
     openApp('chat_app');
 }
 
-// ==========================================
-// 7. CHAT LOGIC (Strict Text & Bot Meme)
-// ==========================================
 function setupChatEvents() {
-    $('#btn-send').click(() => sendGhostMsg());
-    $('#chat-inp').on('keypress', (e) => { if(e.which===13) sendGhostMsg(); });
-    $('#btn-meme').click(() => $('#meme-drawer').toggleClass('show'));
-    $('.meme-drawer').click((e) => {
+    $('#btn-send').off('click').on('click', () => sendGhostMsg());
+    $('#chat-inp').off('keypress').on('keypress', (e) => { if(e.which===13) sendGhostMsg(); });
+    $('#btn-meme').off('click').on('click', () => $('#meme-drawer').toggleClass('show'));
+    $('.meme-drawer').off('click').on('click', (e) => {
         if(e.target.className.includes('meme-drawer')) $('#meme-drawer').removeClass('show'); 
     });
 }
 
+// ** BUG FIX: The core function for bot reply **
 async function sendGhostMsg(content = null, isImg = false) {
     if (!activePhoneChar) {
-        alert("Please select a contact first!");
-        openApp('contacts');
+        alert("Please select a contact first in the Contacts App!");
+        console.error("sendGhostMsg aborted: No activePhoneChar selected.");
         return;
     }
 
@@ -350,14 +329,12 @@ async function sendGhostMsg(content = null, isImg = false) {
     input.val('');
 
     // 1. Show User Msg
-    const html = isImg ? `<img src="${text}" class="msg-img">` : text;
-    addBubble('user', html);
-
-    // 2. Prepare Prompt (Strict Text-Only + Bot Meme Instruction)
     const userMessage = isImg ? '[The user sent a funny meme image]' : text;
+    const html = isImg ? `<img src="${content}" class="msg-img">` : text;
+    addBubble('user', html);
     phoneChatHistory.push({ role: 'User', content: userMessage });
     
-    // **คำสั่งที่กำหนดให้บอทตอบเป็นข้อความคุยล้วน หรือส่งมีม**
+    // 2. Prepare Prompt (Strict Text-Only + Bot Meme Instruction)
     let prompt = `You are roleplaying as ${activePhoneChar.name}. You are texting on an instant messenger. Your reply MUST be ONLY the text message content, OR ONLY the URL of one of the provided memes (Example: ${CONFIG.memes[0]}), if appropriate. DO NOT include any narration, actions, or feelings in your text reply. DO NOT use asterisks (*) or parentheses (). Keep replies short and realistic for texting.\n\n`;
     prompt += `Persona: ${activePhoneChar.persona}\n\n`;
     prompt += `Meme Options: ${CONFIG.memes.join(' | ')}\n\n`;
@@ -368,6 +345,8 @@ async function sendGhostMsg(content = null, isImg = false) {
 
     const loadingId = 'load-' + Date.now();
     addBubble('bot', `<span id="${loadingId}">...</span>`);
+    
+    console.log("Sending prompt to API:", prompt); // DEBUG LOG
 
     try {
         const res = await fetch('/api/generate/text', {
@@ -376,18 +355,22 @@ async function sendGhostMsg(content = null, isImg = false) {
             body: JSON.stringify({
                 prompt: prompt,
                 use_story: false, use_memory: false,
-                single_line: true, max_length: 120, // max_length เพิ่มขึ้นเล็กน้อย
+                single_line: true, max_length: 120, 
                 temperature: 0.8
             })
         });
+
+        if (!res.ok) {
+            throw new Error(`API returned status ${res.status}`);
+        }
+        
         const data = await res.json();
         const rawReply = data.results[0].text.trim();
 
-        // 3. Process Bot Reply (Check if it's a Meme URL or Text)
+        // 3. Process Bot Reply
         let finalReply = rawReply;
         let botSentImage = false;
         
-        // Check if the reply is one of the meme URLs
         if (CONFIG.memes.some(memeUrl => rawReply.includes(memeUrl))) {
             const matchedUrl = CONFIG.memes.find(url => rawReply.includes(url));
             if (matchedUrl) {
@@ -404,7 +387,8 @@ async function sendGhostMsg(content = null, isImg = false) {
         });
 
     } catch(e) {
-        $(`#${loadingId}`).parent().text("Error connecting to AI");
+        console.error("AI Generation Failed:", e);
+        $(`#${loadingId}`).parent().text("Connection Error. Check console for details.");
     }
 }
 
@@ -415,11 +399,147 @@ function addBubble(role, html) {
 }
 
 // ==========================================
-// 8. UTILITIES
+// 7. NEW DETAILED APP MOCKUPS
 // ==========================================
+
+function renderAppGallery() {
+    return `
+        <div id="app-gallery" class="app-window" data-parent="launcher" style="background:#000;">
+            <div class="app-header" style="background:#111; color:white; border:none;">
+                <span class="back-btn" onclick="openApp('launcher')" style="color:#eee;">❮ Back</span>
+                <span class="app-title" style="color:white;">Photos</span>
+                <span></span>
+            </div>
+            <div class="meme-grid" id="gal-grid" style="overflow-y:auto; padding:10px;"></div>
+        </div>
+    `;
+}
+
+function renderAppPhone() {
+    return `
+        <div id="app-phone" class="app-window" data-parent="launcher">
+            <div class="app-header">
+                <span class="back-btn" onclick="openApp('launcher')">❮ Back</span>
+                <span class="app-title">Phone</span>
+                <span></span>
+            </div>
+            <div class="app-content" style="padding: 10px 0;">
+                <div style="height: 120px; display: flex; justify-content: center; align-items: center; font-size: 32px; font-weight: 300; border-bottom: 1px solid #eee;" id="dialer-number"></div>
+                <div class="keypad">
+                    <div class="key">1</div><div class="key">2</div><div class="key">3</div>
+                    <div class="key">4</div><div class="key">5</div><div class="key">6</div>
+                    <div class="key">7</div><div class="key">8</div><div class="key">9</div>
+                    <div class="key">*</div><div class="key">0</div><div class="key">#</div>
+                </div>
+                <div style="display:flex; justify-content:center; padding: 20px;">
+                    <div class="key call-btn" id="btn-call"><i class="fa-solid fa-phone"></i></div>
+                </div>
+                <div style="text-align:center; color:red; font-size:12px; padding:10px;" id="call-status"></div>
+            </div>
+        </div>
+    `;
+}
+
+function renderAppSettings() {
+    return `
+        <div id="app-settings" class="app-window" data-parent="launcher">
+            <div class="app-header">
+                <span class="back-btn" onclick="openApp('launcher')">❮ Back</span>
+                <span class="app-title">Settings</span>
+                <span><i class="fa-solid fa-magnifying-glass"></i></span>
+            </div>
+            <div class="app-content" style="padding: 0;">
+                <h3 style="padding:10px;">General</h3>
+                <div class="setting-item"><span>Wi-Fi</span><span>On <i class="fa-solid fa-angle-right"></i></span></div>
+                <div class="setting-item"><span>Bluetooth</span><span>Connected <i class="fa-solid fa-angle-right"></i></span></div>
+                <h3 style="padding:10px;">Device Info</h3>
+                <div class="setting-item"><span>Model</span><span>${CONFIG.device.model}</span></div>
+                <div class="setting-item"><span>OS Version</span><span>${CONFIG.device.os}</span></div>
+                <div class="setting-item"><span>Storage</span><span>${CONFIG.device.storage} used</span></div>
+                <h3 style="padding:10px;">Character Link</h3>
+                <div class="setting-item" onclick="openApp('contacts')"><span>Active Contact</span><span><span id="settings-active-char">N/A</span> <i class="fa-solid fa-angle-right"></i></span></div>
+            </div>
+        </div>
+    `;
+}
+
+function renderAppNotes() {
+    return `
+        <div id="app-notes" class="app-window" data-parent="launcher">
+            <div class="app-header">
+                <span class="back-btn" onclick="openApp('launcher')">❮ Back</span>
+                <span class="app-title">Notes</span>
+                <span class="back-btn" id="btn-save-notes">Save</span>
+            </div>
+            <div class="app-content" style="padding: 0;">
+                <textarea id="notes-area">${localNotes}</textarea>
+            </div>
+        </div>
+    `;
+}
+
+
+// ==========================================
+// 8. UTILITIES (Post-Render Setup)
+// ==========================================
+
+// Setup for Phone App
+$(document).ready(() => {
+    let currentNumber = '';
+    const numberDisplay = $('#dialer-number');
+    const callStatus = $('#call-status');
+
+    // Keypad Click Event
+    $('#app-phone .key').click(function() {
+        const key = $(this).text().trim();
+        if (key.length === 1) { // Numbers and symbols
+            currentNumber += key;
+            numberDisplay.text(currentNumber);
+        }
+    });
+
+    // Call Button Event
+    $('#btn-call').click(function() {
+        if (!activePhoneChar) {
+            callStatus.text("Select a contact before calling!");
+            return;
+        }
+        if (currentNumber.length < 5) {
+            callStatus.text("Invalid number.");
+            return;
+        }
+
+        callStatus.text(`Calling ${activePhoneChar.name} at ${currentNumber}...`);
+        
+        // Simulation of a call reply (using chat logic, but quicker)
+        setTimeout(() => {
+            callStatus.text(`${activePhoneChar.name} answered: "Hello?"`);
+            setTimeout(() => {
+                callStatus.text(`Call ended: ${activePhoneChar.name} hung up.`);
+                // Reset after simulation
+                setTimeout(() => callStatus.text(""), 3000); 
+            }, 3000);
+        }, 2000);
+    });
+
+    // Setup for Notes App
+    $('#btn-save-notes').click(() => {
+        localNotes = $('#notes-area').val();
+        alert('Note saved!');
+        openApp('launcher');
+    });
+
+    // Clock
+    setInterval(updateClock, 10000);
+});
+
 function updateClock() {
     const d = new Date();
     const time = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
     $('#ph-clock').text(time);
-    setTimeout(updateClock, 10000); // Update every 10 seconds
+
+    // Update settings active character display
+    if (activePhoneChar) {
+        $('#settings-active-char').text(activePhoneChar.name);
+    }
 }
