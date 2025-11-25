@@ -10,7 +10,6 @@ const CONFIG = {
     ]
 };
 
-// เก็บข้อมูลตัวละครที่คุยด้วยในมือถือ
 let activePhoneChar = null; 
 let phoneChatHistory = [];
 
@@ -21,7 +20,7 @@ jQuery(async () => {
     // Trigger Button
     $('body').append(`<div id="phone-trigger-btn"><i class="fa-solid fa-mobile-screen"></i></div>`);
 
-    // Phone HTML Structure
+    // Phone HTML Structure (Copied from V7)
     const phoneHTML = `
     <div id="silly-phone-root">
         <div class="phone-case" id="phone-drag-zone">
@@ -51,8 +50,7 @@ jQuery(async () => {
                     <div class="chat-head" style="background:white;">
                         <span style="font-size:20px;">Contacts</span>
                     </div>
-                    <div class="contact-list" id="contact-list-container">
-                        </div>
+                    <div class="contact-list" id="contact-list-container"></div>
                 </div>
 
                 <div id="app-chat" class="app-window">
@@ -93,13 +91,11 @@ jQuery(async () => {
     $('body').append(phoneHTML);
 
     // ==========================================
-    // LOGIC: CONTACTS (หัวใจสำคัญ)
+    // LOGIC: CONTACTS
     // ==========================================
     window.loadContacts = () => {
         const listContainer = $('#contact-list-container');
         listContainer.empty();
-
-        // ดึงข้อมูลตัวละครทั้งหมดจาก SillyTavern
         const context = SillyTavern.getContext();
         
         if (!context || !context.characters || context.characters.length === 0) {
@@ -107,9 +103,8 @@ jQuery(async () => {
             return;
         }
 
-        // วนลูปสร้างรายการ
-        context.characters.forEach((char, index) => {
-            if (!char || !char.avatar) return; // ข้ามตัวที่ข้อมูลไม่ครบ
+        context.characters.forEach((char) => {
+            if (!char || !char.avatar) return; 
 
             const item = $(`
                 <div class="contact-item">
@@ -122,14 +117,11 @@ jQuery(async () => {
             `);
 
             item.click(() => {
-                // ตั้งค่าตัวละครที่จะคุยด้วยในมือถือ
                 activePhoneChar = {
                     name: char.name,
                     avatar: `/characters/${char.avatar}`,
                     persona: char.description + " " + char.personality
                 };
-                
-                // เปลี่ยนหน้าไปห้องแชท
                 startChatWithActiveChar();
             });
 
@@ -140,13 +132,11 @@ jQuery(async () => {
     function startChatWithActiveChar() {
         if(!activePhoneChar) return;
 
-        // อัปเดตหัวข้อแชท
         $('#chat-nm').text(activePhoneChar.name);
         $('#chat-av').attr('src', activePhoneChar.avatar).show();
         
-        // เคลียร์แชทเก่า (หรือจะทำระบบเก็บแยกแต่ละคนก็ได้ แต่นี่เอาแบบง่ายก่อน)
         $('#chat-msgs').html(`<div style="text-align:center; color:#999; margin-top:10px; font-size:12px;">Private Chat with ${activePhoneChar.name}</div>`);
-        phoneChatHistory = []; // รีเซ็ตประวัติคุย
+        phoneChatHistory = []; 
 
         openApp('chat');
     }
@@ -169,10 +159,7 @@ jQuery(async () => {
     });
 
     $('#btn-meme').click(() => $('#meme-drawer').toggleClass('show'));
-    $('.meme-drawer').click((e) => {
-        if(e.target.className.includes('meme-drawer')) $('#meme-drawer').removeClass('show'); 
-    });
-
+    
     // ส่งข้อความ
     async function sendGhostMsg(content = null, isImg = false) {
         if (!activePhoneChar) {
@@ -190,12 +177,13 @@ jQuery(async () => {
         const html = isImg ? `<img src="${text}" class="msg-img">` : text;
         addBubble('user', html);
 
-        // 2. Prepare Prompt
+        // 2. Prepare Prompt (ส่วนสำคัญที่ถูกแก้ไข)
         phoneChatHistory.push({ role: 'User', content: isImg ? '[Sent an image]' : text });
         
-        let prompt = `Write a text message reply as ${activePhoneChar.name}.\n`;
-        prompt += `Persona: ${activePhoneChar.persona}\n`;
-        prompt += `Context: Smartphone chat app. Short, casual reply.\n\nChat History:\n`;
+        // **คำสั่งที่กำหนดให้บอทตอบเป็นข้อความคุยเท่านั้น**
+        let prompt = `You are roleplaying as ${activePhoneChar.name}. You are texting on an instant messenger. Your reply MUST be ONLY the text message content, without any narration, descriptions of actions, feelings, or atmosphere. DO NOT use asterisks (*) or parentheses () for actions/emotions. Keep replies short and realistic for texting.\n`;
+        prompt += `Persona: ${activePhoneChar.persona}\n\n`;
+        prompt += `Chat History:\n`;
         
         phoneChatHistory.slice(-6).forEach(h => prompt += `${h.role}: ${h.content}\n`);
         prompt += `${activePhoneChar.name}:`;
@@ -228,9 +216,6 @@ jQuery(async () => {
         d.append(`<div class="msg-bubble msg-${role}">${html}</div>`);
         d.scrollTop(d[0].scrollHeight);
     }
-
-    $('#btn-send').click(() => sendGhostMsg());
-    $('#chat-inp').on('keypress', (e) => { if(e.which===13) sendGhostMsg(); });
 
     // ==========================================
     // LOGIC: NAVIGATION & DRAG
@@ -277,56 +262,3 @@ jQuery(async () => {
         $('#ph-clock').text(`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`);
     }, 1000);
 });
-
-// ส่งข้อความและคุยกับบอท (Ghost Mode)
-async function sendGhostMsg(content = null, isImg = false) {
-    if (!activePhoneChar) {
-        alert("Please select a contact first!");
-        openApp('contacts');
-        return;
-    }
-
-    const input = $('#chat-inp');
-    const text = content || input.val().trim();
-    if(!text) return;
-    input.val('');
-
-    // 1. Show User Msg
-    const html = isImg ? `<img src="${text}" class="msg-img">` : text;
-    addBubble('user', html);
-
-    // 2. Prepare Prompt (ส่วนสำคัญที่ถูกแก้ไข)
-    phoneChatHistory.push({ role: 'User', content: isImg ? '[Sent an image]' : text });
-    
-    // **คำสั่งที่กำหนดให้บอทตอบเป็นข้อความคุยเท่านั้น:**
-    let prompt = `You are roleplaying as ${activePhoneChar.name}. You are texting on an instant messenger. Your reply MUST be ONLY the text message content, without any narration, descriptions of actions, feelings, or atmosphere. DO NOT use asterisks (*) or parentheses () for actions/emotions. Keep replies short and realistic for texting.\n`;
-    prompt += `Persona: ${activePhoneChar.persona}\n\n`;
-    prompt += `Chat History:\n`;
-    
-    // ใส่ประวัติการคุย
-    phoneChatHistory.slice(-6).forEach(h => prompt += `${h.role}: ${h.content}\n`);
-    prompt += `${activePhoneChar.name}:`;
-
-    const loadingId = 'load-' + Date.now();
-    addBubble('bot', `<span id="${loadingId}">...</span>`);
-
-    try {
-        // ยิง API ไปหา LLM
-        const res = await fetch('/api/generate/text', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                prompt: prompt,
-                use_story: false, use_memory: false,
-                single_line: true, max_length: 100 // จำกัดให้ตอบสั้น
-            })
-        });
-        const data = await res.json();
-        const reply = data.results[0].text.trim();
-
-        $(`#${loadingId}`).parent().text(reply);
-        phoneChatHistory.push({ role: activePhoneChar.name, content: reply });
-    } catch(e) {
-        $(`#${loadingId}`).parent().text("Error connecting to AI");
-    }
-}
