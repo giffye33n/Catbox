@@ -1,85 +1,49 @@
-// ==========================================
-// CONFIG: ตั้งค่ารูปและพื้นหลัง
-// ==========================================
-const CONFIG = {
-    wallpaper: "https://images.unsplash.com/photo-1536566482680-fca31930a09d?q=80&w=1000&auto=format&fit=crop",
-    memes: [
-        { url: "https://files.catbox.moe/lf4i26.jpg", title: "Angry" },
-        { url: "https://files.catbox.moe/mds278.jpg", title: "Love" },
-        { url: "https://files.catbox.moe/27e41w.jpg", title: "Confused" },
-    ]
-};
+// 1. ตั้งค่ามีม (เพิ่มลิ้งค์ Catbox ของคุณที่นี่)
+const MEME_LIST = [
+    "https://files.catbox.moe/lf4i26.jpg",
+    "https://files.catbox.moe/mds278.jpg",
+    "https://files.catbox.moe/27e41w.jpg"
+];
 
-const ROOT_ID = 'silly-phone-root';
+// ประวัติแชทเฉพาะในมือถือ (จะถูกล้างเมื่อรีเฟรชหน้าเว็บ)
+let phoneChatHistory = [];
 
-// ==========================================
-// MAIN LOGIC
-// ==========================================
 jQuery(async () => {
-    // ล้างของเก่า
-    $(`#${ROOT_ID}`).remove();
-    $('#phone-trigger-btn').remove();
+    // ล้าง UI เก่า
+    $('#silly-phone-root, #phone-trigger-btn').remove();
 
-    // 1. สร้างปุ่มลอย
-    const triggerBtn = $(`<div id="phone-trigger-btn"><i class="fa-solid fa-mobile-screen"></i></div>`);
-    $('body').append(triggerBtn);
+    // สร้างปุ่มเปิด
+    $('body').append(`<div id="phone-trigger-btn"><i class="fa-solid fa-comment-dots"></i></div>`);
 
-    // 2. สร้างโครงสร้างมือถือ
+    // สร้าง UI โทรศัพท์
     const phoneHTML = `
-    <div id="${ROOT_ID}">
-        <div class="phone-case" id="phone-draggable-area">
-            <div class="screen" style="background-image: url('${CONFIG.wallpaper}');">
-                <div class="dynamic-island"></div>
-                <div class="status-bar">
-                    <span id="ph-clock">12:00</span>
-                    <span><i class="fa-solid fa-wifi"></i> 100%</span>
+    <div id="silly-phone-root">
+        <div class="phone-case" id="drag-handle">
+            <div class="screen">
+                <div class="dynamic-island" id="drag-island"></div>
+                
+                <div class="chat-header">
+                    <img src="" class="char-avatar" id="ph-avatar">
+                    <span class="char-name" id="ph-name">Select Char</span>
                 </div>
 
-                <div class="app-grid">
-                    <div class="app-icon-wrapper" onclick="window.openPhoneApp('contacts')">
-                        <div class="app-icon bg-contacts"><i class="fa-solid fa-address-book"></i></div>
-                        <div class="app-label">Contacts</div>
-                    </div>
-                    <div class="app-icon-wrapper" onclick="window.openPhoneApp('chat')">
-                        <div class="app-icon bg-chat"><i class="fa-brands fa-whatsapp"></i></div>
-                        <div class="app-label">Chat</div>
-                    </div>
-                    <div class="app-icon-wrapper" onclick="window.openPhoneApp('photos')">
-                        <div class="app-icon bg-catbox"><i class="fa-solid fa-photo-film"></i></div>
-                        <div class="app-label">CatBox</div>
+                <div class="chat-body" id="ph-chat-body">
+                    <div style="text-align:center; color:#999; font-size:12px; margin-top:20px;">
+                        ข้อความในนี้เป็นความลับ<br>จะไม่บันทึกลงแชทหลัก
                     </div>
                 </div>
 
-                <div id="app-contacts" class="app-window">
-                    <div class="app-header">Contacts</div>
-                    <div class="contact-list" id="ph-contact-list"></div>
+                <div class="meme-drawer" id="ph-meme-drawer">
+                    <div class="meme-grid" id="ph-meme-grid"></div>
                 </div>
 
-                <div id="app-chat" class="app-window">
-                    <div class="app-header">
-                        <span class="back-btn" onclick="window.closePhoneApps()">❮ Home</span>
-                        <span id="chat-header-name">Chat</span>
-                        <div style="width:20px;"></div>
-                    </div>
-                    <div class="chat-area">
-                        <div class="chat-messages" id="ph-chat-msgs"></div>
-                        <div class="chat-input-bar">
-                            <input type="text" class="chat-input" id="ph-chat-input" placeholder="Message...">
-                            <i class="fa-solid fa-paper-plane send-icon" id="ph-chat-send"></i>
-                        </div>
-                    </div>
+                <div class="input-area">
+                    <i class="fa-regular fa-face-smile icon-btn" id="btn-toggle-meme"></i>
+                    <input type="text" class="chat-input" id="ph-input" placeholder="พิมพ์ข้อความ...">
+                    <i class="fa-solid fa-paper-plane icon-btn send-btn" id="btn-send"></i>
                 </div>
-
-                <div id="app-photos" class="app-window">
-                    <div class="app-header">
-                        <span class="back-btn" onclick="window.closePhoneApps()">❮ Home</span>
-                        <span>Photos</span>
-                        <div style="width:20px;"></div>
-                    </div>
-                    <div class="gallery-grid" id="ph-gallery"></div>
-                </div>
-
-                <div class="home-indicator" id="ph-home-btn" title="Go Home"></div>
+                
+                <div style="height:5px; width:100px; background:#ddd; border-radius:5px; margin:5px auto; cursor:pointer;" id="btn-home"></div>
             </div>
         </div>
     </div>`;
@@ -87,191 +51,169 @@ jQuery(async () => {
     $('body').append(phoneHTML);
 
     // ==========================================
-    // FEATURES IMPLEMENTATION
+    // 1. ระบบลาก (Draggable) - เขียนใหม่ให้เสถียร
     // ==========================================
-
-    // --- A. ระบบลากย้าย (Draggable) ---
-    const phoneRoot = document.getElementById(ROOT_ID);
-    const dragHandle = document.getElementById('phone-draggable-area');
+    const phone = document.getElementById('silly-phone-root');
+    const handles = [document.getElementById('drag-handle'), document.getElementById('drag-island')];
     
-    let isDragging = false;
-    let startX, startY, initialLeft, initialTop;
+    let isDragging = false, startX, startY, initialLeft, initialTop;
 
-    dragHandle.addEventListener('mousedown', (e) => {
-        // ป้องกันการลากเมื่อกดที่หน้าจอ (Screen)
-        if(e.target.closest('.screen')) return;
-
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        
-        const rect = phoneRoot.getBoundingClientRect();
-        initialLeft = rect.left;
-        initialTop = rect.top;
-        
-        dragHandle.style.cursor = 'grabbing';
+    handles.forEach(handle => {
+        handle.addEventListener('mousedown', (e) => {
+            if(e.target.closest('.screen') && e.target !== document.getElementById('drag-island')) return; // ห้ามลากถ้าโดนจอ
+            
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            const rect = phone.getBoundingClientRect();
+            initialLeft = rect.left;
+            initialTop = rect.top;
+            phone.style.cursor = 'grabbing';
+        });
     });
 
     document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
+        if(!isDragging) return;
         e.preventDefault();
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        
-        phoneRoot.style.left = `${initialLeft + dx}px`;
-        phoneRoot.style.top = `${initialTop + dy}px`;
+        phone.style.left = `${initialLeft + (e.clientX - startX)}px`;
+        phone.style.top = `${initialTop + (e.clientY - startY)}px`;
     });
 
     document.addEventListener('mouseup', () => {
         isDragging = false;
-        dragHandle.style.cursor = 'grab';
+        phone.style.cursor = 'default';
     });
 
-
-    // --- B. ระบบ Chat & Contacts ---
-    
-    // ฟังก์ชันโหลดรายชื่อตัวละครจาก SillyTavern
-    function loadContacts() {
-        const list = $('#ph-contact-list');
-        list.empty();
-
-        // ดึงจาก DOM ของ SillyTavern (วิธีที่ง่ายที่สุด)
-        // หมายเหตุ: ต้องมีตัวละครโหลดอยู่แล้วในหน้าเว็บ
-        const characters = $('.character_select'); 
-        
-        if(characters.length === 0) {
-            list.append('<div style="padding:20px; text-align:center;">No characters found.<br>Please select a character in main UI first.</div>');
-            return;
-        }
-
-        characters.each(function() {
-            const id = $(this).attr('chid');
-            const name = $(this).find('.character_name').text() || $(this).attr('title') || "Unknown";
-            const avatar = $(this).find('img').attr('src');
-
-            const item = $(`
-                <div class="contact-item">
-                    <img src="${avatar}" class="contact-avatar">
-                    <div class="contact-info">
-                        <b>${name}</b>
-                        <span>Click to chat</span>
-                    </div>
-                </div>
-            `);
-
-            item.on('click', () => {
-                // จำลองการคลิกเลือกตัวละครใน SillyTavern จริงๆ
-                $(this).click();
-                
-                // เปิดหน้าแชท
-                $('#chat-header-name').text(name);
-                $('#ph-chat-msgs').empty(); // เคลียร์แชทเก่า (หรือจะเก็บไว้ก็ได้ถ้าทำระบบเมม)
-                window.openPhoneApp('chat');
-            });
-
-            list.append(item);
+    // ==========================================
+    // 2. ระบบ Meme Drawer
+    // ==========================================
+    const memeGrid = $('#ph-meme-grid');
+    MEME_LIST.forEach(url => {
+        const img = $(`<img src="${url}" class="meme-thumb">`);
+        img.on('click', () => {
+            // ส่งรูปในนาม User
+            appendMessage('user', `<img src="${url}" class="msg-img">`);
+            $('#ph-meme-drawer').removeClass('open');
+            // ให้บอทตอบกลับรูปภาพ
+            generateGhostReply(`[Sent an image: ${url}]`);
         });
+        memeGrid.append(img);
+    });
+
+    $('#btn-toggle-meme').on('click', () => {
+        $('#ph-meme-drawer').toggleClass('open');
+    });
+
+    // ==========================================
+    // 3. ระบบแชทแยกโลก (Ghost Chat Logic)
+    // ==========================================
+    
+    // ฟังก์ชันดึงข้อมูลตัวละครปัจจุบัน
+    function getCurrentChar() {
+        // ดึงตัวแปร Global ของ SillyTavern
+        if (typeof SillyTavern === 'undefined') return { name: 'Bot', persona: 'You are a helpful assistant.' };
+        
+        const context = SillyTavern.getContext();
+        const charId = context.characterId;
+        const charData = context.characters[charId];
+        
+        return {
+            name: charData.name,
+            persona: charData.description + "\n" + charData.personality,
+            avatar: charData.avatar
+        };
     }
 
     // ฟังก์ชันส่งข้อความ
-    function sendPhoneMessage() {
-        const input = $('#ph-chat-input');
-        const text = input.val().trim();
-        if(!text) return;
-
-        // 1. แสดงฝั่ง User ในมือถือ
-        $('#ph-chat-msgs').append(`<div class="msg-bubble msg-user">${text}</div>`);
-        scrollToBottom();
-
-        // 2. ส่งเข้า SillyTavern (เหมือนพิมพ์ในช่องปกติ)
-        const stInput = $('#send_textarea');
-        stInput.val(text);
-        // Trigger Input Event
-        stInput[0].dispatchEvent(new Event('input', { bubbles: true }));
-        // Click Send
-        $('#send_but').click();
-
-        input.val('');
+    async function handleSend() {
+        const txt = $('#ph-input').val().trim();
+        if(!txt) return;
+        
+        $('#ph-input').val('');
+        appendMessage('user', txt);
+        await generateGhostReply(txt);
     }
 
-    // ฟังชั่นจับข้อความใหม่จากบอท (Observer)
-    // เพื่อเอามาแสดงในมือถือ
-    const chatObserver = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.addedNodes.length) {
-                $(mutation.addedNodes).each(function() {
-                    // เช็คว่าเป็นข้อความจากบอทหรือไม่ (mes class)
-                    if ($(this).hasClass('mes') && !$(this).attr('is_user')) {
-                        const botText = $(this).find('.mes_text').text();
-                        // แสดงในมือถือ
-                        $('#ph-chat-msgs').append(`<div class="msg-bubble msg-bot">${botText}</div>`);
-                        scrollToBottom();
-                    }
-                });
-            }
+    // UI: เพิ่มข้อความลงหน้าจอ
+    function appendMessage(role, htmlContent) {
+        const div = $(`<div class="msg msg-${role}">${htmlContent}</div>`);
+        $('#ph-chat-body').append(div);
+        $('#ph-chat-body').scrollTop($('#ph-chat-body')[0].scrollHeight);
+    }
+
+    // CORE: คุยกับ AI ผ่าน API โดยตรง (ไม่ผ่าน UI หลัก)
+    async function generateGhostReply(userText) {
+        const char = getCurrentChar();
+        
+        // เพิ่มข้อความลงประวัติมือถือ
+        phoneChatHistory.push({ role: 'User', content: userText });
+
+        // สร้าง Prompt สำหรับส่ง API
+        // "จำลองสถานการณ์คุยมือถือ"
+        let prompt = `Write a short text message reply as ${char.name}.\n`;
+        prompt += `Personality: ${char.persona}\n`;
+        prompt += `Context: You are chatting on a smartphone instant messenger. Keep it short, casual, use emojis if fits.\n\n`;
+        prompt += `Chat History:\n`;
+        
+        // เอา 5 ข้อความล่าสุดมาใส่ context
+        const recentHistory = phoneChatHistory.slice(-5);
+        recentHistory.forEach(h => {
+            prompt += `${h.role}: ${h.content}\n`;
         });
-    });
+        prompt += `${char.name}:`;
 
-    // เริ่มจับตาดู Chat Log หลักของ SillyTavern
-    const chatLog = document.getElementById('chat');
-    if(chatLog) {
-        chatObserver.observe(chatLog, { childList: true });
+        // แสดงสถานะ "กำลังพิมพ์..."
+        const loadingId = Date.now();
+        appendMessage('bot', `<span id="${loadingId}">...</span>`);
+
+        try {
+            // ยิง API ภายในของ SillyTavern
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: prompt,
+                    use_story: false,
+                    use_memory: false,
+                    use_authors_note: false,
+                    use_world_info: false,
+                    single_line: true, // เอาแค่บรรทัดเดียว
+                    max_length: 100    // ไม่เอาตอบยาว
+                })
+            });
+
+            const data = await response.json();
+            const reply = data.results[0].text.trim();
+
+            // อัปเดต UI
+            $(`#${loadingId}`).parent().text(reply);
+            phoneChatHistory.push({ role: char.name, content: reply });
+
+        } catch (e) {
+            console.error(e);
+            $(`#${loadingId}`).parent().text("Error: Could not connect to AI.");
+        }
     }
 
-    function scrollToBottom() {
-        const d = $('#ph-chat-msgs');
-        d.scrollTop(d[0].scrollHeight);
-    }
+    // ==========================================
+    // 4. Event Listeners ทั่วไป
+    // ==========================================
+    $('#btn-send').on('click', handleSend);
+    $('#ph-input').on('keypress', (e) => { if(e.which===13) handleSend(); });
 
-    // Bind Events
-    $('#ph-chat-send').on('click', sendPhoneMessage);
-    $('#ph-chat-input').on('keypress', (e) => { if(e.which===13) sendPhoneMessage(); });
-
-
-    // --- C. ระบบ Gallery (Catbox) ---
-    const gallery = $('#ph-gallery');
-    CONFIG.memes.forEach(url => {
-        const img = $(`<img src="${url}" class="gallery-img">`);
-        img.on('click', () => {
-            // ส่งรูปแบบ Markdown
-            const stInput = $('#send_textarea');
-            stInput.val(`![](${url})`);
-            stInput[0].dispatchEvent(new Event('input', { bubbles: true }));
-            $('#send_but').click();
-            
-            // กลับไปหน้าแชท (Optional)
-            window.openPhoneApp('chat');
-        });
-        gallery.append(img);
-    });
-
-
-    // --- D. Global UI Controls ---
-    window.openPhoneApp = (appName) => {
-        if(appName === 'contacts') loadContacts();
-        $(`#app-${appName}`).addClass('active');
-    };
-
-    window.closePhoneApps = () => {
-        $('.app-window').removeClass('active');
-    };
-
-    // ปุ่มโฮม (Home Bar)
-    $('#ph-home-btn').on('click', window.closePhoneApps);
-
-    // ปุ่มเปิดมือถือหลัก
-    triggerBtn.on('click', () => {
-        const phone = $(`#${ROOT_ID}`);
-        if(phone.css('display') === 'none') {
-            phone.fadeIn(200);
+    // ปุ่มเปิด/ปิด มือถือ
+    $('#phone-trigger-btn').on('click', () => {
+        const root = $('#silly-phone-root');
+        if(root.is(':visible')) {
+            root.fadeOut();
         } else {
-            phone.fadeOut(200);
+            // อัปเดตรูป/ชื่อตัวละครทุกครั้งที่เปิด
+            const char = getCurrentChar();
+            $('#ph-name').text(char.name);
+            $('#ph-avatar').attr('src', `/characters/${char.avatar}`);
+            root.fadeIn();
         }
     });
 
-    // นาฬิกา
-    setInterval(() => {
-        const d = new Date();
-        $('#ph-clock').text(`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`);
-    }, 1000);
+    $('#btn-home').on('click', () => $('#silly-phone-root').fadeOut());
 });
