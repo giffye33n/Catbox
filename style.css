@@ -111,3 +111,31 @@
 .hp-fill { background-color: #e74c3c; } /* Red */
 .mp-fill { background-color: #3498db; } /* Blue */
 .stamina-fill { background-color: #2ecc71; } /* Green */
+
+/* --- New: Floating Trigger Button --- */
+#stats-trigger-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background: #007bff; /* Blue color */
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+    z-index: 10001;
+    transition: background 0.2s;
+}
+#stats-trigger-btn:hover {
+    background: #0056b3;
+}
+/* Ensure the Stats Viewer is hidden by default and can be toggled */
+#silly-stats-root {
+    /* ... (Existing styles remain) ... */
+    display: none; /* Make sure this remains 'display: none;' */
+}
