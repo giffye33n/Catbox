@@ -1,11 +1,9 @@
 {
-    "display_name": "Name Displayed in SillyTavern",
-    "loading_order": 9,
-    "requires": [],
-    "optional": [],
-    "js": "index.js",
+    "display_name": "SillyOS Smartphone",
+    "author": "Eclair",
+    "version": "2.0.0",
     "css": "style.css",
-    "author": "yourNameHere",
-    "version": "1.0.0",
-    "homePage": "yourUrlHere"
+    "js": "index.js",
+    "type": "module",
+    "description": "A fully functional modern virtual smartphone for memes and chatting."
 }
