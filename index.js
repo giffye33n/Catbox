@@ -544,6 +544,13 @@ function updateClock() {
     }
 }
 
+// Add Font Awesome Icons for the UI
+$('head').append('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">');
+
+// ==========================================
+// CONFIG & STATE
+// ==========================================
+const CONFIG = {
 // ** FIX: The core function for bot reply, now using window.API.generate **
 async function sendGhostMsg(content = null, isImg = false) {
     if (!activePhoneChar) {
@@ -612,5 +619,6 @@ async function sendGhostMsg(content = null, isImg = false) {
     } catch(e) {
         console.error("AI Generation Failed (using window.API.generate):", e);
         $(`#${loadingId}`).parent().text("AI Error. Try selecting the character again.");
+
     }
 }
